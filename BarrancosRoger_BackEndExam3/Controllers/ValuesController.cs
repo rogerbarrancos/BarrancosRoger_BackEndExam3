@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using BarrancosRoger_BackEndExam3.Models;
 using BarrancosRoger_BackEndExam3.Database_Access;
+using BarrancosRoger_BackEndExam3.Logging;
 
 namespace BarrancosRoger_BackEndExam3.Controllers
 {
@@ -11,26 +12,50 @@ namespace BarrancosRoger_BackEndExam3.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
-        //GET api values
-        [HttpGet]
-        public IEnumerable<string> GetRebels()
-        {
-            string[] results;
-            db connectDB = new db();
-            results = connectDB.dbQuery("Select * from rebels");
-            return results;
-        }
+
+        Log log = new Log();
+
+        //El protocolo GET no es necesario para esta implementacion, pendiente de borrar
+
+        ////GET api values
+        //[HttpGet]
+        //public void GetRebels()
+        //{
+        ////{
+        ////    string[] results;
+        ////    db connectDB = new db();
+        ////    functions fn = new functions();
+
+        ////    //Pido que me traduzcan a un array el dataset que pido en la misma instruccion sobre el select de todos los rebeldes
+        ////    results = fn.DataSetToStringArray(connectDB.dbQuery("Select * from rebels"));
+        ////    List<string> lst = new List<string>();
+        ////    lst= connectDB.dbQuery("Select * from rebels");
+        ////    return ls;
+        //Console.WriteLine("Success");
+        //}
+
+
+
+        // Intento insertar con valores POST, retornando un boolean dependiendo de si se ha hecho correctamente.
 
         // POST api/values
         [HttpPost]
-        public void AddRebel([FromBody] Rebel rebel)
+        public bool AddRebel([FromBody] Rebel rebel)
         {
             db connectDB = new db();
 
             //Inserto y reviso con el boolean si lo ha hecho correctamente
             Boolean result = connectDB.insertRebel(rebel);
+            return result;
+        }
 
-            //if (result) { Request.CreateResponse() } else { }
+        [Route("Add")]
+        public string Post([FromBody]Rebel rebel)
+        {
+            //Logueo y muestro el resultado
+            string message= string.Format("Rebelde {0} insertado correctamente", rebel.name); ;
+            log.logToFile(message);
+            return message;
         }
     }
 }

@@ -3,10 +3,13 @@ using System.Linq;
 using System.Data;
 using MySql.Data.MySqlClient;
 using BarrancosRoger_BackEndExam3.Models;
+using BarrancosRoger_BackEndExam3.Logging;
+using System.Collections.Generic;
 
 namespace BarrancosRoger_BackEndExam3.Database_Access
 {
     public class db {
+        Log log = new Log();
         static MySqlConnectionStringBuilder conn_settings = new MySqlConnectionStringBuilder
         {
             UserID = "qj75Nek5PO",
@@ -17,36 +20,61 @@ namespace BarrancosRoger_BackEndExam3.Database_Access
         };
         MySqlConnection conn = new MySqlConnection(conn_settings.ConnectionString);
 
-
-        public string[] dbQuery(string query){
-            string[] result;
+        public DataSet dbQuery(string query){
             conn.Open();
             MySqlCommand command = new MySqlCommand(query,conn);
+            DataSet dsData = new DataSet();
             var dt = new DataTable();
             dt.Load(command.ExecuteReader());
-            result = dt.Rows[0].ItemArray.Select(x => x.ToString()).ToArray();
+            string[] result = new string[dt.Rows.Count];
+            dsData.Tables.Add(dt);
+            //foreach (DataRow row in dt.Rows){
+            //result = dt.Rows.OfType<DataRow>().Select(k => k[i].ToString()).ToArray();                
+            //    result[i] = row.ItemArray.ToString();
+            //}
+            List<string> lst = new List<string>();
+            //for (int i = 0; i < dt.Rows.Count; i++)
+            //{
+            //    result[i] = dsData.Tables[0].Rows[i]["name"].ToString();
+            //}
+            //lst = dsData;
             conn.Close();
-            return result;
+            return dsData;
         }
 
         public bool insertRebel(Rebel rebel)
         {
-            conn.Open();
+            try
+            {
+                conn.Open();
 
-            //Inserto NULL en ID porque el Auto_Increment de la Base de datos rellena automaticamente
-            MySqlCommand com = new MySqlCommand("INSERT INTO rebels VALUES (NULL,@name,@planet,@registered_date)");
-            com.Parameters.AddWithValue("@name", rebel.name);
-            com.Parameters.AddWithValue("@planet", rebel.planet);
-            //Formato en YYYY-MM-dd para igualarlo con DB
-            com.Parameters.AddWithValue("@registered_date",DateTime.Now.Date.ToString("yyyy-MM-dd"));
-            com.Connection = conn;
-            //Reviso que realmente ha afectado a alguna columna
-            if (com.ExecuteNonQuery() != 0) {
-                conn.Close();
-                return true;
+                //Inserto NULL en ID porque el Auto_Increment de la Base de datos rellena automaticamente el campo
+                MySqlCommand com = new MySqlCommand("INSERT INTO rebels VALUES (NULL,@name,@planet,@registered_date)");
+                com.Parameters.AddWithValue("@name", rebel.name.Trim());
+                com.Parameters.AddWithValue("@planet", rebel.planet.Trim());
+                //Formato en YYYY-MM-dd para igualarlo con DB
+                com.Parameters.AddWithValue("@registered_date", DateTime.Now.Date.ToString("yyyy-MM-dd"));
+                com.Connection = conn;
+
+                //Verifico que realmente hay datos a insertar
+                if (rebel.name.Trim() != "" && rebel.planet.Trim() != "")
+                {
+                    //Reviso que realmente ha afectado a alguna columna
+                    if (com.ExecuteNonQuery() != 0)
+                    {
+                        conn.Close();
+                        return true;
+                    }
+                    else
+                    {
+                        conn.Close();
+                        return false;
+                    }
+                }
+                else { return false; }
             }
-            else {
-                conn.Close();
+            catch (MySqlException ex) {
+                log.logToFile(ex.Data.ToString());
                 return false;
             }
         }
