@@ -36,7 +36,7 @@ namespace BarrancosRoger_BackEndExam3.Controllers
 
 
 
-        // Intento insertar con valores POST, retornando un boolean dependiendo de si se ha hecho correctamente.
+        // Inserto con valores proporcionados por POST, retornando un boolean dependiendo de si se ha hecho correctamente.
 
         // POST api/values
         [HttpPost]
@@ -48,6 +48,8 @@ namespace BarrancosRoger_BackEndExam3.Controllers
             Boolean result = connectDB.insertRebel(rebel);
             return result;
         }
+
+        //Prueba de Log en ruta api/values/add cuando envías un post. Registra a archivo pero no BD
 
         [Route("Add")]
         public string Post([FromBody]Rebel rebel)
